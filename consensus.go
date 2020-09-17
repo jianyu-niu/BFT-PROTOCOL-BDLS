@@ -327,6 +327,10 @@ type Consensus struct {
 
 	// broadcasting messages being sent to myself
 	loopback [][]byte
+
+	// last message which caused round change
+	lastRoundChangeMessage     *Message
+	lastRoundChangeSignedProto *SignedProto
 }
 
 // NewConsensus creates a BDLS consensus object to participant in consensus procedure,
@@ -1023,6 +1027,29 @@ func (c *Consensus) broadcast(m *Message) *SignedProto {
 	return sp
 }
 
+// resyncRound will broadcast the latest round change messages if there is any
+func (c *Consensus) resyncRound() {
+	// return if there is none
+	if c.lastRoundChangeMessage == nil && c.lastRoundChangeSignedProto == nil {
+		return
+	}
+
+	// message callback
+	if c.messageOutCallback != nil {
+		c.messageOutCallback(c.lastRoundChangeMessage, c.lastRoundChangeSignedProto)
+	}
+	// protobuf marshalling
+	out, err := proto.Marshal(c.lastRoundChangeSignedProto)
+	if err != nil {
+		panic(err)
+	}
+
+	// send to peers one by one
+	for _, peer := range c.peers {
+		_ = peer.Send(out)
+	}
+}
+
 // sendTo signs the message with private key before transmitting to the peer.
 func (c *Consensus) sendTo(m *Message, leader Identity) {
 	// sign
@@ -1137,11 +1164,13 @@ func (c *Consensus) heightSync(height uint64, round uint64, s State, now time.Ti
 	c.latestRound = round   // set round
 	c.latestState = s       // set state
 
-	c.currentRound = nil // clean current round pointer
-	c.rounds.Init()      // clean all round
-	c.locks = nil        // clean locks
-	c.unconfirmed = nil  // clean all unconfirmed states from previous heights
-	c.switchRound(0)     // start new round at new height
+	c.currentRound = nil               // clean current round pointer
+	c.lastRoundChangeMessage = nil     // clean round change events
+	c.lastRoundChangeSignedProto = nil // clean round change events
+	c.rounds.Init()                    // clean all round
+	c.locks = nil                      // clean locks
+	c.unconfirmed = nil                // clean all unconfirmed states from previous heights
+	c.switchRound(0)                   // start new round at new height
 	c.currentRound.Stage = stageRoundChanging
 }
 
@@ -1322,6 +1351,10 @@ func (c *Consensus) ReceiveMessage(bts []byte, now time.Time) error {
 			c.Propose(m.State)
 		}
 
+		// record this event for resyncing
+		c.lastRoundChangeMessage = m
+		c.lastRoundChangeSignedProto = signed
+
 	case MessageType_Lock:
 		// verify <lock> message
 		err := c.verifyLockMessage(m, signed)
@@ -1358,6 +1391,10 @@ func (c *Consensus) ReceiveMessage(bts []byte, now time.Time) error {
 		// for any incoming <lock,h,r,B'> message with r=r', sendCommit will send
 		// <commit,h,r',B'> once.
 		c.sendCommit(m)
+
+		// record this event for resyncing
+		c.lastRoundChangeMessage = m
+		c.lastRoundChangeSignedProto = signed
 
 	case MessageType_LockRelease:
 		// verifies the LockRelease field in message.
@@ -1474,6 +1511,8 @@ func (c *Consensus) Update(now time.Time) error {
 		if now.After(c.rcTimeout) {
 			c.broadcastRoundChange()
 			c.rcTimeout = now.Add(c.roundchangeDuration(c.currentRound.RoundNumber))
+			// we also need to broadcast the round change event message if there is any
+			c.resyncRound()
 		}
 	case stageLock:
 		if c.lockTimeout.IsZero() {
