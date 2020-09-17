@@ -1030,7 +1030,7 @@ func (c *Consensus) broadcast(m *Message) *SignedProto {
 // resyncRound will broadcast the latest round change messages if there is any
 func (c *Consensus) resyncRound() {
 	// return if there is none
-	if c.lastRoundChangeMessage == nil && c.lastRoundChangeSignedProto == nil {
+	if c.lastRoundChangeMessage == nil || c.lastRoundChangeSignedProto == nil {
 		return
 	}
 
