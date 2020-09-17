@@ -62,6 +62,8 @@ enum MessageType{
 	LockRelease = 5;
 	// MessageDecide = <decide> message
 	Decide = 6;
+	// MessageResync= <resync> message
+	Resync = 7;
 }
 
 // Message defines a consensus message
