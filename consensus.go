@@ -35,7 +35,6 @@ import (
 	"container/list"
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"log"
 	"net"
 	"sort"
 	"time"
@@ -1035,7 +1034,6 @@ func (c *Consensus) resyncRound() {
 		return
 	}
 
-	log.Println("resync")
 	// message callback
 	if c.messageOutCallback != nil {
 		c.messageOutCallback(c.lastRoundChangeMessage, c.lastRoundChangeSignedProto)
