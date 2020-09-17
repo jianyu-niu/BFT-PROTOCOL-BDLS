@@ -35,6 +35,7 @@ import (
 	"container/list"
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"log"
 	"net"
 	"sort"
 	"time"
@@ -1034,6 +1035,7 @@ func (c *Consensus) resyncRound() {
 		return
 	}
 
+	log.Println("resync")
 	// message callback
 	if c.messageOutCallback != nil {
 		c.messageOutCallback(c.lastRoundChangeMessage, c.lastRoundChangeSignedProto)
@@ -1510,9 +1512,8 @@ func (c *Consensus) Update(now time.Time) error {
 
 		if now.After(c.rcTimeout) {
 			c.broadcastRoundChange()
+			c.resyncRound() // we also need to broadcast the round change event message if there is any
 			c.rcTimeout = now.Add(c.roundchangeDuration(c.currentRound.RoundNumber))
-			// we also need to broadcast the round change event message if there is any
-			c.resyncRound()
 		}
 	case stageLock:
 		if c.lockTimeout.IsZero() {
