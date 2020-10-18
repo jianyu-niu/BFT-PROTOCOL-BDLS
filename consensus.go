@@ -1600,6 +1600,7 @@ func (c *Consensus) CurrentProof() *SignedProto { return c.latestProof }
 func (c *Consensus) SetLatency(latency time.Duration) { c.latency = latency }
 
 // HasProposed checks whether some state has been proposed via <roundchange>
+// <lock> or left in c.unconfirmed
 func (c *Consensus) HasProposed(state State) bool {
 	stateHash := c.stateHash(state)
 	for elem := c.rounds.Front(); elem != nil; elem = elem.Next() {
@@ -1610,6 +1611,19 @@ func (c *Consensus) HasProposed(state State) bool {
 			}
 		}
 	}
+
+	for k := range c.locks {
+		if c.locks[k].StateHash == stateHash {
+			return true
+		}
+	}
+
+	for k := range c.unconfirmed {
+		if c.stateHash(c.unconfirmed[k]) == stateHash {
+			return true
+		}
+	}
+
 	return false
 }
 
