@@ -51,6 +51,9 @@ const (
 	// consensus protocol, user can adjust consensus object's latency setting
 	// via Consensus.SetLatency()
 	DefaultConsensusLatency = 300 * time.Millisecond
+
+	// MaxConsensusLatency is the ceiling of latencies
+	MaxConsensusLatency = 10 * time.Second
 )
 
 type (
@@ -384,27 +387,47 @@ func (c *Consensus) init(config *Config) {
 
 //  calculates roundchangeDuration
 func (c *Consensus) roundchangeDuration(round uint64) time.Duration {
-	return 2 * c.latency * (1 << round)
+	d := 2 * c.latency * (1 << round)
+	if d > MaxConsensusLatency {
+		d = MaxConsensusLatency
+	}
+	return d
 }
 
 //  calculates collectDuration
 func (c *Consensus) collectDuration(round uint64) time.Duration {
-	return 2 * c.latency * (1 << round)
+	d := 2 * c.latency * (1 << round)
+	if d > MaxConsensusLatency {
+		d = MaxConsensusLatency
+	}
+	return d
 }
 
 //  calculates lockDuration
 func (c *Consensus) lockDuration(round uint64) time.Duration {
-	return 4 * c.latency * (1 << round)
+	d := 4 * c.latency * (1 << round)
+	if d > MaxConsensusLatency {
+		d = MaxConsensusLatency
+	}
+	return d
 }
 
 // calculates commitDuration
 func (c *Consensus) commitDuration(round uint64) time.Duration {
-	return 2 * c.latency * (1 << round)
+	d := 2 * c.latency * (1 << round)
+	if d > MaxConsensusLatency {
+		d = MaxConsensusLatency
+	}
+	return d
 }
 
 // calculates lockReleaseDuration
 func (c *Consensus) lockReleaseDuration(round uint64) time.Duration {
-	return 2 * c.latency * (1 << round)
+	d := 2 * c.latency * (1 << round)
+	if d > MaxConsensusLatency {
+		d = MaxConsensusLatency
+	}
+	return d
 }
 
 // maximalLocked finds the maximum locked data in this round,
