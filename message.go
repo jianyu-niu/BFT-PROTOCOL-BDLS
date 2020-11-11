@@ -35,6 +35,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"math/big"
 
@@ -85,6 +86,11 @@ func (t *PubKeyAxis) Unmarshal(data []byte) error {
 
 // Size implements protobuf Size
 func (t *PubKeyAxis) Size() int { return SizeAxis }
+
+// String representation of Axis
+func (t *PubKeyAxis) String() string {
+	return hex.EncodeToString((*t)[:])
+}
 
 // Identity is a user-defined struct to encode X-axis and Y-axis for a publickey in an array
 type Identity [2 * SizeAxis]byte
