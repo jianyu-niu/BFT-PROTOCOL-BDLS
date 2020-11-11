@@ -92,6 +92,11 @@ func (t *PubKeyAxis) String() string {
 	return hex.EncodeToString((*t)[:])
 }
 
+// String representation of Axis
+func (t *PubKeyAxis) MarshalText() (text []byte, err error) {
+	return []byte(hex.EncodeToString((*t)[:])), nil
+}
+
 // Identity is a user-defined struct to encode X-axis and Y-axis for a publickey in an array
 type Identity [2 * SizeAxis]byte
 
