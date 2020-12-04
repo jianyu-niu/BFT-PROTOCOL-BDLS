@@ -1,3 +1,6 @@
+# BDLS
+Efficient BFT in partial synchronous networks 
+
 [![GoDoc][1]][2] [![License][3]][4] [![Build Status][5]][6] [![Go Report Card][7]][8] [![Coverage Statusd][9]][10] [![Sourcegraph][11]][12]
 
 [1]: https://godoc.org/github.com/Sperax/bdls?status.svg
